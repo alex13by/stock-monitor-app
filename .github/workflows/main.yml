@@ -25,8 +25,7 @@ jobs:
       - name: Install Buildozer and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev build-essential automake gettext
-          pip install --upgrade pip
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev build-essential automake gettext
           pip install "buildozer==1.5.0" cython "setuptools<60.0"
 
       - name: Build with Buildozer
