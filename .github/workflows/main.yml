@@ -48,6 +48,7 @@ jobs:
           [android]
           android.api = 34
           android.permissions = INTERNET
+          android.accept_sdk_license = True
           EOF
 
           # 直接运行编译，不再需要 sed
