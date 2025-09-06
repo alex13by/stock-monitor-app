@@ -1,4 +1,4 @@
-name: Buildozer Android APK
+name: P4A Android APK Build
 
 on:
   push:
@@ -12,72 +12,64 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Buildozer and system dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev build-essential automake gettext
+          sudo apt-get install -y \
+              git \
+              zip \
+              unzip \
+              autoconf \
+              libtool \
+              pkg-config \
+              zlib1g-dev \
+              libncurses-dev \
+              cmake \
+              libffi-dev \
+              libssl-dev \
+              build-essential \
+              automake \
+              gettext
           pip install --upgrade pip
-          pip install "buildozer==1.5.0" cython "setuptools<60.0"
+          pip install cython "setuptools<60.0"
 
-      - name: Build with Buildozer
+      - name: Install and configure python-for-android
         run: |
-          # ----------------------------------------------------
-          # 手动预准备阶段：我们自己搞定所有 Android SDK 的东西
-          # ----------------------------------------------------
+          pip install python-for-android
+          # 接受所有 SDK 许可 (这是 p4a 内置的更可靠的方法)
+          p4a sdk --accept-licenses
+          # 下载所有需要的平台和工具
+          p4a sdk --platforms android-34 --build-tools 34.0.0
           
-          # 找到 Android SDK 的路径
-          SDK_MANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+      - name: Build with python-for-android
+        run: |
+          p4a apk --name "A股异动监控" \
+                  --package "org.test.stockmonitor" \
+                  --version 0.1 \
+                  --bootstrap sdl2 \
+                  --requirements "python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl" \
+                  --arch arm64-v8a \
+                  --release \
+                  --permission INTERNET \
+                  --private .
 
-          # 1. 强制接受所有已知的许可协议
-          yes | $SDK_MANAGER --licenses
-
-          # 2. 手动安装我们需要的平台和构建工具
-          #    这是最关键的一步，我们明确指定了稳定版本
-          $SDK_MANAGER --install "platforms;android-34" "build-tools;34.0.0"
-
-          # ----------------------------------------------------
-          # Buildozer 工作阶段：现在所有东西都准备好了
-          # ----------------------------------------------------
-
-          # 创建 buildozer.spec 文件
-          cat > buildozer.spec << EOF
-          [app]
-          title = A股异动监控
-          package.name = stockmonitor
-          package.domain = org.test
-          source.dir = .
-          source.include_exts = py,png,jpg,kv,atlas,ttf
-          version = 0.1
-          requirements = python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl
-          orientation = portrait
-          
-          [buildozer]
-          log_level = 2
-          
-          [android]
-          # 我们依然保留这些配置，确保 buildozer 能正确识别
-          android.api = 34
-          android.build_tools = 34.0.0
-          android.permissions = INTERNET
-          android.accept_sdk_license = True
-          EOF
-
-          # 运行编译。这一次 buildozer 会发现所有东西都已存在，直接开始编译代码
-          buildozer -v android debug
+      - name: Find and rename APK
+        run: |
+          find . -type f -name "*.apk" -exec mv {} A-Stock-Monitor.apk \;
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: stockmonitor-apk
-          path: bin/*.apk
+          path: A-Stock-Monitor.apk
