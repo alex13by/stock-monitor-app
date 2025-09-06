@@ -50,11 +50,8 @@ jobs:
           android.permissions = INTERNET
           # 我们保留这一行，作为双重保险
           android.accept_sdk_license = True
+          android.build_tools = 34.0.0
           EOF
-
-          # 【【【 新增的关键步骤 】】】
-          # 强制性地、自动地接受所有 Android SDK 许可
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
           # 最后，正常运行编译
           buildozer -v android debug
