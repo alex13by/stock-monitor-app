@@ -1,65 +1,61 @@
 name: Buildozer Android APK
 
-# 这一段的意思是：当有人向 main 或 master 分支推送代码时，就触发这个流程
 on:
   push:
     branches: [ "main", "master" ]
 
 jobs:
   build:
-    # 使用最新版的 Ubuntu 服务器
     runs-on: ubuntu-latest
-
     steps:
-      # 第1步: 把你的代码下载到服务器上
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 第2步: 安装 Java (打包需要)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 第3步: 安装 Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 第4步: 安装所有系统依赖和 buildozer
       - name: Install Buildozer and dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev build-essential automake gettext
           pip install --upgrade pip
-          # 注意：我们在这里固定了 setuptools 的版本，避免新版可能带来的问题
           pip install "buildozer==1.5.0" cython "setuptools<60.0"
 
-      # 第5步: 自动修改 buildozer.spec 文件 (核心！)
-      # 这一步会根据我们的需要，自动修改我们上传的 buildozer.spec 文件
-      - name: Configure Buildozer spec from template
-        run: |
-          # 从一个基础模板创建 buildozer.spec
-          buildozer init
-          
-          # 使用 sed 命令进行精确替换
-          sed -i 's/^title = .*/title = A股异动监控/' buildozer.spec
-          sed -i 's/^package.name = .*/package.name = stockmonitor/' buildozer.spec
-          sed -i 's/^requirements = .*/requirements = python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl/' buildozer.spec
-          sed -i 's/^#android.permissions = .*/android.permissions = INTERNET/' buildozer.spec
-          # 注意：你的主文件名是"安卓应用.py"，这里要匹配它，如果不是请修改
-          sed -i 's/^#source.name = .*/source.name = 安卓应用/' buildozer.spec
-          sed -i 's/^android.api = .*/android.api = 34/' buildozer.spec
-
-      # 第6步: 开始编译！
       - name: Build with Buildozer
-        run: buildozer -v android debug
+        run: |
+          # 我们在这里直接创建 buildozer.spec 文件，内容更可控
+          cat > buildozer.spec << EOF
+          [app]
+          title = A股异动监控
+          package.name = stockmonitor
+          package.domain = org.test
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas,ttf
+          version = 0.1
+          requirements = python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl
+          orientation = portrait
+          
+          [buildozer]
+          log_level = 2
+          
+          [android]
+          android.api = 34
+          android.permissions = INTERNET
+          EOF
 
-      # 第7步: 上传编译好的 APK 文件，方便我们下载
+          # 直接运行编译，不再需要 sed
+          buildozer -v android debug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: stockmonitor-apk
-          path: bin/*.apk
+          path: bin/stockmonitor-0.1-arm64-v8a-debug.apk
