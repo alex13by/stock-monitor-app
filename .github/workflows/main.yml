@@ -1,0 +1,61 @@
+name: Buildozer Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Buildozer and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev build-essential automake gettext
+          pip install --upgrade pip
+          pip install "buildozer==1.5.0" cython "setuptools<60.0"
+
+      - name: Build with Buildozer
+        run: |
+          # 我们在这里直接创建 buildozer.spec 文件，内容更可控
+          cat > buildozer.spec << EOF
+          [app]
+          title = A股异动监控
+          package.name = stockmonitor
+          package.domain = org.test
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas,ttf
+          version = 0.1
+          requirements = python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl
+          orientation = portrait
+          
+          [buildozer]
+          log_level = 2
+          
+          [android]
+          android.api = 34
+          android.permissions = INTERNET
+          EOF
+
+          # 直接运行编译，不再需要 sed
+          buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: stockmonitor-apk
+          path: bin/stockmonitor-0.1-arm64-v8a-debug.apk
