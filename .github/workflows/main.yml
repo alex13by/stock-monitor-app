@@ -7,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,15 +23,34 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Buildozer and dependencies
+      - name: Install Buildozer and system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev build-essential automake gettext
+          pip install --upgrade pip
           pip install "buildozer==1.5.0" cython "setuptools<60.0"
 
       - name: Build with Buildozer
         run: |
-          # 我们在这里直接创建 buildozer.spec 文件...
+          # ----------------------------------------------------
+          # 手动预准备阶段：我们自己搞定所有 Android SDK 的东西
+          # ----------------------------------------------------
+          
+          # 找到 Android SDK 的路径
+          SDK_MANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+
+          # 1. 强制接受所有已知的许可协议
+          yes | $SDK_MANAGER --licenses
+
+          # 2. 手动安装我们需要的平台和构建工具
+          #    这是最关键的一步，我们明确指定了稳定版本
+          $SDK_MANAGER --install "platforms;android-34" "build-tools;34.0.0"
+
+          # ----------------------------------------------------
+          # Buildozer 工作阶段：现在所有东西都准备好了
+          # ----------------------------------------------------
+
+          # 创建 buildozer.spec 文件
           cat > buildozer.spec << EOF
           [app]
           title = A股异动监控
@@ -39,25 +59,25 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas,ttf
           version = 0.1
-          requirements = python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopensyl
+          requirements = python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl
           orientation = portrait
-    
+          
           [buildozer]
           log_level = 2
-    
+          
           [android]
+          # 我们依然保留这些配置，确保 buildozer 能正确识别
           android.api = 34
-          android.permissions = INTERNET
-          # 我们保留这一行，作为双重保险
-          android.accept_sdk_license = True
           android.build_tools = 34.0.0
+          android.permissions = INTERNET
+          android.accept_sdk_license = True
           EOF
 
-          # 最后，正常运行编译
+          # 运行编译。这一次 buildozer 会发现所有东西都已存在，直接开始编译代码
           buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: stockmonitor-apk
-          path: bin/stockmonitor-0.1-arm64-v8a-debug.apk
+          path: bin/*.apk
