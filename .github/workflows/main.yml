@@ -48,9 +48,9 @@ jobs:
         run: |
           pip install python-for-android
           # 接受所有 SDK 许可 (这是 p4a 内置的更可靠的方法)
-          p4a sdk --accept-licenses
+          p4a sdk-tools --accept-licenses
           # 下载所有需要的平台和工具
-          p4a sdk --platforms android-34 --build-tools 34.0.0
+          p4a sdk-tools --platforms android-34 --build-tools 34
           
       - name: Build with python-for-android
         run: |
