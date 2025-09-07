@@ -1,4 +1,4 @@
-name: Build APK with Official Kivy Android Packager
+name: Build APK with Official kivy/buildozer Image
 
 on:
   push:
@@ -12,15 +12,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build with the Official Kivy Android Packager Docker image
+      - name: Build with the Official kivy/buildozer Docker image
         run: |
-          # 运行 Kivy 官方的、预设好一切的 Docker 镜像来完成编译
-          # 这次使用了绝对正确的镜像名称
+          # 运行 Kivy 官方的、正确的 Buildozer 镜像
           docker run --rm \
-              -v ${{ github.workspace }}:/app \
-              kivy/kivy-android-packager:latest \
-              /bin/bash -c "cd /app && buildozer -v android debug"
-
+            -v ${{ github.workspace }}:/workdir \
+            kivy/buildozer:latest \
+            /bin/bash -c " \
+              set -ex; \
+              # 镜像内部可能需要更新和安装 C 语言库的依赖 (为 pandas/numpy)
+              apt-get update; \
+              apt-get install -y --no-install-recommends \
+                libncurses5-dev \
+                libffi-dev; \
+              # 运行编译，强制用 yes 回答所有可能的提问
+              cd /workdir; \
+              yes | buildozer -v android debug; \
+            "
+      
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
