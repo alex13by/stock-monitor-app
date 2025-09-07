@@ -1,4 +1,4 @@
-name: Build APK with Dockerized Builder
+name: Build APK with Official Kivy-CI Docker Image
 
 on:
   push:
@@ -12,31 +12,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build with Docker
+      - name: Build with Kivy-CI Docker image
         run: |
-          # 运行一个 ubuntu:20.04 的 Docker 容器，并把我们的代码挂载进去
+          # 运行 Kivy 官方的、预设好一切的 Docker 镜像来完成编译
+          # 它内部包含了版本匹配的工具链和所有依赖的补丁
           docker run --rm \
-            -v ${{ github.workspace }}:/workdir \
-            ubuntu:20.04 \
-            /bin/bash -c " \
-              set -ex; \
-              export DEBIAN_FRONTEND=noninteractive; \
-              sed -i 's@//archive.ubuntu.com@//mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list; \
-              # 在容器内部，更新并安装所有必需的依赖
-              apt-get update; \
-              apt-get install -y --no-install-recommends \
-                git zip unzip patch openjdk-17-jdk python3-pip python3-venv autoconf automake libtool \
-                pkg-config zlib1g-dev libncurses5-dev libffi-dev libssl-dev build-essential gettext; \
-              # 创建一个虚拟环境并安装 buildozer
-              python3 -m venv venv; \
-              . venv/bin/activate; \
-              pip install --upgrade pip; \
-              pip install 'buildozer==1.5.0' cython; \
-              # 进入工作目录并开始编译
-              cd /workdir; \
-              yes | buildozer -v android debug; \
-            "
-      
+              -v ${{ github.workspace }}:/app \
+              kivy/kivy-ci:android \
+              /bin/bash -c "cd /app && buildozer -v android debug"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
