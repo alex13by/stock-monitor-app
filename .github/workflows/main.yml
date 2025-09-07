@@ -1,4 +1,4 @@
-name: Build APK with Official Kivy-CI Docker Image
+name: Build APK with Official Kivy Android Packager
 
 on:
   push:
@@ -12,13 +12,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build with Kivy-CI Docker image
+      - name: Build with the Official Kivy Android Packager Docker image
         run: |
           # 运行 Kivy 官方的、预设好一切的 Docker 镜像来完成编译
-          # 它内部包含了版本匹配的工具链和所有依赖的补丁
+          # 这次使用了绝对正确的镜像名称
           docker run --rm \
               -v ${{ github.workspace }}:/app \
-              kivy/kivy-ci:android \
+              kivy/kivy-android-packager:latest \
               /bin/bash -c "cd /app && buildozer -v android debug"
 
       - name: Upload APK
