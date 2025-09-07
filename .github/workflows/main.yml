@@ -44,8 +44,7 @@ jobs:
               pip install 'buildozer==1.5.0' cython; \
               # 进入工作目录并开始编译
               cd /workdir; \
-              export BUILDOZER_ALLOW_ROOT=1; \
-              buildozer -v android debug; \
+              yes | buildozer -v android debug; \
             "
       
       - name: Upload APK
