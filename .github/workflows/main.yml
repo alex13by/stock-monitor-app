@@ -24,9 +24,9 @@ jobs:
               apt-get update; \
               # 安装一个精简但完整的依赖列表
               apt-get install -y --no-install-recommends \
-                git zip unzip patch openjdk-17-jdk python3-pip python3-venv \
-                autoconf libtool pkg-config zlib1g-dev libncurses5-dev \
-                libffi-dev libssl-dev; \
+                build-essential make git zip unzip patch openjdk-17-jdk python3-pip python3-venv \
+                pkg-config cmake gettext autoconf automake libtool libtool-bin \
+                zlib1g-dev libncurses5-dev libffi-dev libssl-dev; \
               python3 -m venv venv; \
               . venv/bin/activate; \
               pip install --upgrade pip; \
