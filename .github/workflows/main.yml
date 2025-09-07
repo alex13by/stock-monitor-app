@@ -44,27 +44,29 @@ jobs:
           pip install --upgrade pip
           pip install cython "setuptools<60.0"
 
-      - name: Install and configure python-for-android
+      - name: Install python-for-android
         run: |
           pip install python-for-android
-          # 下载所有需要的平台和工具
-          p4a sdk-tools install --platforms android-34 --build-tools 34.0.0
-          
+
       - name: Build with python-for-android
         run: |
+          # 【【【 核心修正 】】】
+          # 使用 --bootstrap=webview 可大大减少依赖编译问题，--window 让其全屏
           p4a apk --name "A股异动监控" \
                   --package "org.test.stockmonitor" \
                   --version 0.1 \
-                  --bootstrap sdl2 \
+                  --bootstrap webview \
                   --requirements "python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl" \
                   --arch arm64-v8a \
                   --release \
                   --permission INTERNET \
-                  --private .
-
+                  --private . \
+                  --window
+        
       - name: Find and rename APK
         run: |
-          find . -type f -name "*.apk" -exec mv {} A-Stock-Monitor.apk \;
+          # 查找生成的release APK并重命名
+          find . -type f -name "*-release-unsigned.apk" -exec mv {} A-Stock-Monitor.apk \;
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
