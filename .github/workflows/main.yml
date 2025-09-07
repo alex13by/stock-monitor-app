@@ -27,6 +27,7 @@ jobs:
               apt-get install -y --no-install-recommends \
                 git \
                 zip \
+                unzip \
                 openjdk-17-jdk \
                 python3-pip \
                 python3-venv \
