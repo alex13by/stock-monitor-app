@@ -5,7 +5,7 @@ package.domain = org.test
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,ttf
 version = 0.1
-requirements = python3,kivy,pandas,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl
+requirements = python3,kivy,akshare,requests,lxml,charset-normalizer,idna,openssl,pyopenssl
 orientation = portrait
 
 [android]
