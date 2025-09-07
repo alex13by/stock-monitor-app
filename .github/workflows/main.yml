@@ -1,4 +1,4 @@
-name: Build APK (Lightweight)
+name: Build APK with Manual Toolchain Downgrade
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build with Dockerized Stable Environment
+      - name: Build with Dockerized Manual Setup
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workdir \
@@ -22,11 +22,32 @@ jobs:
               export DEBIAN_FRONTEND=noninteractive; \
               sed -i 's@//archive.ubuntu.com@//mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list; \
               apt-get update; \
-              # 安装一个精简但完整的依赖列表
+              # 安装除 autoconf/libtool 之外的所有依赖
               apt-get install -y --no-install-recommends \
-                build-essential make git zip unzip patch openjdk-17-jdk python3-pip python3-venv \
-                pkg-config cmake gettext autoconf automake libtool libtool-bin \
-                zlib1g-dev libncurses5-dev libffi-dev libssl-dev; \
+                build-essential git zip unzip patch openjdk-17-jdk python3-pip python3-venv \
+                pkg-config cmake gettext zlib1g-dev libncurses5-dev libffi-dev libssl-dev wget; \
+              
+              # 【【【 核心修正：手动安装旧版的 autoconf 和 libtool 】】】
+              # 安装 m4, 它是 autoconf 的依赖
+              apt-get install -y m4; \
+              # 下载、编译和安装 autoconf 2.69
+              wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz; \
+              tar xzf autoconf-2.69.tar.gz; \
+              cd autoconf-2.69; \
+              ./configure --prefix=/usr; \
+              make; \
+              make install; \
+              cd ..; \
+              # 下载、编译和安装 libtool 2.4.6
+              wget http://ftpmirror.gnu.org/libtool/libtool-2.4.6.tar.gz; \
+              tar xzf libtool-2.4.6.tar.gz; \
+              cd libtool-2.4.6; \
+              ./configure --prefix=/usr; \
+              make; \
+              make install; \
+              cd ..; \
+              
+              # 现在，在一个拥有了正确版本工具链的环境中，继续我们的流程
               python3 -m venv venv; \
               . venv/bin/activate; \
               pip install --upgrade pip; \
