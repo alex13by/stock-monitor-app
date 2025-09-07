@@ -25,19 +25,8 @@ jobs:
               # 在容器内部，更新并安装所有必需的依赖
               apt-get update; \
               apt-get install -y --no-install-recommends \
-                git \
-                zip \
-                unzip \
-                openjdk-17-jdk \
-                python3-pip \
-                python3-venv \
-                autoconf \
-                libtool \
-                pkg-config \
-                libncurses5-dev \
-                libffi-dev \
-                libssl-dev \
-                zlib1g-dev; \
+                git zip unzip patch openjdk-17-jdk python3-pip python3-venv autoconf automake libtool \
+                pkg-config zlib1g-dev libncurses5-dev libffi-dev libssl-dev build-essential gettext; \
               # 创建一个虚拟环境并安装 buildozer
               python3 -m venv venv; \
               . venv/bin/activate; \
