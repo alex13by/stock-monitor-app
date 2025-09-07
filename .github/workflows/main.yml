@@ -12,19 +12,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 关键第一步：设置正确的 JDK 17 环境 (借鉴自 AutoJs6)
+      # 关键第一步：设置正确的 JDK 17 环境
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # 关键第二步：安装 NDK (借鉴自 AutoJs6)
-      # 明确安装一个已知的、稳定的 NDK 版本，而不是让 buildozer 自己猜
+      # 【【【 新增的、最关键的前置步骤 】】】
+      # 准备 Android SDK 环境，下载命令行工具
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3.0.1
+      
+      # 关键第二步：现在，我们可以安全地使用 sdkmanager 来安装 NDK 了
       - name: Install NDK
-        run: echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;25.2.9519653" --sdk_root=${ANDROID_HOME}
+        run: echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653" --sdk_root=${ANDROID_HOME}
 
-      # 关键第三步：安装精简且正确的系统依赖 (借鉴自 AutoJs6)
+      # 关键第三步：安装系统依赖和 Buildozer
       - name: Install dependencies
         run: |
           sudo apt-get update
