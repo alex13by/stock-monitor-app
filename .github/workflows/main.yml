@@ -21,6 +21,7 @@ jobs:
             /bin/bash -c " \
               set -ex; \
               export DEBIAN_FRONTEND=noninteractive; \
+              sed -i 's@//archive.ubuntu.com@//mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list; \
               # 在容器内部，更新并安装所有必需的依赖
               apt-get update; \
               apt-get install -y --no-install-recommends \
