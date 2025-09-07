@@ -25,7 +25,7 @@ jobs:
               # 安装除 autoconf/libtool 之外的所有依赖
               apt-get install -y --no-install-recommends \
                 build-essential git zip unzip patch openjdk-17-jdk python3-pip python3-venv \
-                pkg-config cmake gettext zlib1g-dev libncurses5-dev libffi-dev libssl-dev wget; \
+                pkg-config cmake gettext automake wget m4; \
               
               # 【【【 核心修正：手动安装旧版的 autoconf 和 libtool 】】】
               # 安装 m4, 它是 autoconf 的依赖
