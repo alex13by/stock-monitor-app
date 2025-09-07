@@ -1,4 +1,4 @@
-name: Build APK without Pandas (Validation)
+name: Build APK (Lightweight)
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build with Dockerized Manual Setup
+      - name: Build with Dockerized Stable Environment
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workdir \
@@ -22,10 +22,11 @@ jobs:
               export DEBIAN_FRONTEND=noninteractive; \
               sed -i 's@//archive.ubuntu.com@//mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list; \
               apt-get update; \
+              # 安装一个精简但完整的依赖列表
               apt-get install -y --no-install-recommends \
-                build-essential git zip unzip patch openjdk-17-jdk python3-pip python3-venv \
-                pkg-config cmake gettext autoconf automake libtool libtool-bin \
-                zlib1g-dev libncurses5-dev libffi-dev libssl-dev; \
+                git zip unzip patch openjdk-17-jdk python3-pip python3-venv \
+                autoconf libtool pkg-config zlib1g-dev libncurses5-dev \
+                libffi-dev libssl-dev; \
               python3 -m venv venv; \
               . venv/bin/activate; \
               pip install --upgrade pip; \
@@ -37,5 +38,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: stockmonitor-apk-no-pandas
+          name: stockmonitor-apk
           path: bin/*.apk
